@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-wasenderapi",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "n8n community node for WasenderAPI",
 	"license": "MIT",
 	"homepage": "https://github.com/wasenderapi/n8n-nodes-wasenderapi",
