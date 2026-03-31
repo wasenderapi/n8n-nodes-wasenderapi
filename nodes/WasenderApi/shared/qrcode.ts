@@ -39,8 +39,6 @@ declare const Buffer: {
 	from(data: string, encoding?: string): BufferLike;
 };
 
-const { deflateSync } = require('zlib');
-
 const QR_MARGIN = 4;
 const QR_SCALE = 8;
 const PNG_SIGNATURE = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -93,10 +91,31 @@ function toPngBytes(qr: QrCode, border: number, scale: number): Uint8Array {
 			Uint8Array.from([8, 6, 0, 0, 0]),
 		),
 	);
-	const dataChunk = createPngChunk('IDAT', deflateSync(imageData));
+	const dataChunk = createPngChunk('IDAT', createZlibData(imageData));
 	const endChunk = createPngChunk('IEND', new Uint8Array(0));
 
 	return concatBytes(PNG_SIGNATURE, headerChunk, dataChunk, endChunk);
+}
+
+function createZlibData(data: Uint8Array): Uint8Array {
+	const header = Uint8Array.from([0x78, 0x01]);
+	const blocks: Uint8Array[] = [];
+
+	for (let offset = 0; offset < data.byteLength; offset += 0xffff) {
+		const blockData = data.subarray(offset, Math.min(offset + 0xffff, data.byteLength));
+		const isFinalBlock = offset + blockData.byteLength >= data.byteLength;
+		const blockHeader = Uint8Array.from([
+			isFinalBlock ? 0x01 : 0x00,
+			blockData.byteLength & 0xff,
+			(blockData.byteLength >>> 8) & 0xff,
+			~blockData.byteLength & 0xff,
+			(~blockData.byteLength >>> 8) & 0xff,
+		]);
+
+		blocks.push(concatBytes(blockHeader, blockData));
+	}
+
+	return concatBytes(header, ...blocks, uint32ToBytes(calculateAdler32(data)));
 }
 
 function createPngChunk(type: string, data: Uint8Array): Uint8Array {
@@ -140,6 +159,18 @@ function calculateCrc32(data: Uint8Array): number {
 	}
 
 	return (crc ^ 0xffffffff) >>> 0;
+}
+
+function calculateAdler32(data: Uint8Array): number {
+	let a = 1;
+	let b = 0;
+
+	for (const value of data) {
+		a = (a + value) % 65521;
+		b = (b + a) % 65521;
+	}
+
+	return ((b << 16) | a) >>> 0;
 }
 
 function createCrc32Table(): Uint32Array {
