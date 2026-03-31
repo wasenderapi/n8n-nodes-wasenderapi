@@ -1,4 +1,4 @@
-# n8n-nodes-wasenderapi-official
+# n8n-nodes-wasenderapi
 
 This is an n8n community node package for [WasenderAPI](https://wasenderapi.com/).
 
@@ -16,14 +16,10 @@ It lets you manage Whatsapp sessions, send messages, work with contacts and grou
 Follow the [n8n community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/), then install:
 
 ```bash
-npm install n8n-nodes-wasenderapi-official
+npm install n8n-nodes-wasenderapi
 ```
 
-Package name:
-
-```text
-n8n-nodes-wasenderapi-official
-```
+Package name: `n8n-nodes-wasenderapi`
 
 ## Nodes
 
@@ -76,6 +72,14 @@ Use a personal access token for account-level endpoints such as:
 
 - Built as an n8n community node package using the current `n8nNodesApiVersion: 1`
 - Verified in this repository with `npm run lint` and `npm run build`
+
+## Releases
+
+- `npm run release` creates the version bump, changelog, git tag, and GitHub release
+- npm publishing is handled by GitHub Actions in `.github/workflows/publish.yml`
+- The publish workflow runs automatically when a GitHub release is published and can also be triggered manually from the Actions tab for the current version
+- For a first-time publish where the package does not exist yet on npm, add a temporary `NPM_TOKEN` GitHub Actions secret with publish permission so the workflow can bootstrap the initial release
+- After the package exists on npm, configure npm Trusted Publishing for this repository and `publish.yml`, then remove the `NPM_TOKEN` secret if you want tokenless publishing
 
 ## Resources
 
