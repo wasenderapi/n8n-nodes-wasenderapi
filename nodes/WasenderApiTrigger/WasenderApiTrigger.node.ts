@@ -10,7 +10,7 @@ import type {
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { getSessions } from '../WasenderApi/listSearch/getSessions';
-import { sessionIdSelect } from '../WasenderApi/shared/descriptions';
+import { requestRetryOptions, sessionIdSelect } from '../WasenderApi/shared/descriptions';
 import { wasenderApiRequest } from '../WasenderApi/shared/transport';
 
 type WasenderResponse = IDataObject;
@@ -76,6 +76,7 @@ export class WasenderApiTrigger implements INodeType {
 				default: ['messages.received'],
 				description: 'Which events from your WhatsApp session should activate this trigger',
 			},
+			requestRetryOptions,
 		],
 	};
 

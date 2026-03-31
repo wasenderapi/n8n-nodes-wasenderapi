@@ -34,7 +34,7 @@ export const contactDescription: INodeProperties[] = [
 		],
 		default: 'getAll',
 	},
-	...createPaginationFields('contact', ['getAll']),
+	...createPaginationFields('contact', ['getAll'], false),
 	{
 		...contactJidSelect,
 		displayOptions: showFor('contact', ['get', 'getPicture', 'upsert', 'block', 'unblock']),

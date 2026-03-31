@@ -17,7 +17,7 @@ import { sessionDescription } from './resources/session';
 import { getContacts } from './listSearch/getContacts';
 import { getGroups } from './listSearch/getGroups';
 import { getSessions } from './listSearch/getSessions';
-import { sessionIdSelect } from './shared/descriptions';
+import { requestRetryOptions, sessionIdSelect } from './shared/descriptions';
 import { wasenderApiRequest } from './shared/transport';
 
 type WasenderCredentialType = 'wasenderAccountApi' | 'selectedSession' | 'none';
@@ -153,6 +153,7 @@ export class WasenderApi implements INodeType {
 			...messageDescription,
 			...contactDescription,
 			...groupDescription,
+			requestRetryOptions,
 		],
 	};
 

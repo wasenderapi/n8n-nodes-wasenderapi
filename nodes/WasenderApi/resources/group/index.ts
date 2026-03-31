@@ -43,7 +43,7 @@ export const groupDescription: INodeProperties[] = [
 		],
 		default: 'getAll',
 	},
-	...createPaginationFields('group', ['getAll']),
+	...createPaginationFields('group', ['getAll'], false),
 	{
 		...groupJidSelect,
 		displayOptions: showFor('group', [

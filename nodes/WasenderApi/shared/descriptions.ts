@@ -93,18 +93,63 @@ export const groupJidSelect: INodeProperties = {
 	],
 };
 
-export function createPaginationFields(resource: string, operations: string[]): INodeProperties[] {
-	const displayOptions = showFor(resource, operations);
-
-	return [
+export const requestRetryOptions: INodeProperties = {
+	displayName: 'Options',
+	name: 'requestOptions',
+	type: 'collection',
+	placeholder: 'Add Option',
+	default: {
+		retryOnFail: true,
+		maxRetries: 10,
+	},
+	options: [
 		{
-			displayName: 'Return All',
-			name: 'returnAll',
+			displayName: 'Retry Failed Requests',
+			name: 'retryOnFail',
 			type: 'boolean',
 			default: true,
-			description: 'Whether to return all results or only up to a given limit',
-			displayOptions,
+			description:
+				'Whether to retry WasenderAPI requests when the API returns 408, 429, 500, 502, or 503',
 		},
+		{
+			displayName: 'Max Retries',
+			name: 'maxRetries',
+			type: 'number',
+			typeOptions: {
+				minValue: 0,
+			},
+			default: 10,
+			description: 'How many retry attempts to make after the initial request',
+		},
+	],
+};
+
+export function createPaginationFields(
+	resource: string,
+	operations: string[],
+	returnAllDefault = true,
+): INodeProperties[] {
+	const displayOptions = showFor(resource, operations);
+	const returnAllField: INodeProperties = returnAllDefault
+		? {
+				displayName: 'Return All',
+				name: 'returnAll',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to return all results or only up to a given limit',
+				displayOptions,
+			}
+		: {
+				displayName: 'Return All',
+				name: 'returnAll',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to return all results or only up to a given limit',
+				displayOptions,
+			};
+
+	return [
+		returnAllField,
 		{
 			displayName: 'Limit',
 			name: 'limit',
