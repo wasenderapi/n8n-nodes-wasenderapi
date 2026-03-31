@@ -121,7 +121,7 @@ export const accountDescription: INodeProperties[] = [
 		displayName: 'Log Messages',
 		name: 'logMessages',
 		type: 'boolean',
-		default: false,
+		default: true,
 		displayOptions: showFor('account', sessionMutationOperations),
 	},
 	{

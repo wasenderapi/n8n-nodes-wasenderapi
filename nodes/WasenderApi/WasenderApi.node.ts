@@ -18,6 +18,7 @@ import { getContacts } from './listSearch/getContacts';
 import { getGroups } from './listSearch/getGroups';
 import { getSessions } from './listSearch/getSessions';
 import { requestRetryOptions, sessionIdSelect } from './shared/descriptions';
+import { renderQrCodeBuffer } from './shared/qrcode';
 import { wasenderApiRequest } from './shared/transport';
 
 type WasenderCredentialType = 'wasenderAccountApi' | 'selectedSession' | 'none';
@@ -303,7 +304,20 @@ async function executeAccountOperation(
 				`/whatsapp-sessions/${encodeURIComponent(sessionId)}/${endpointByOperation[operation]}`,
 			)) as WasenderResponse;
 
-			return extractResponsePayload(response);
+			const responsePayload = extractResponsePayload(response);
+
+			if (operation === 'connect') {
+				return (
+					(await createQrCodeBinaryExecutionData.call(
+						this,
+						responsePayload,
+						itemIndex,
+						`session-${sessionId}-connect-qrcode.png`,
+					)) ?? responsePayload
+				);
+			}
+
+			return responsePayload;
 		}
 		case 'getQrCode': {
 			const sessionId = getResourceLocatorValue.call(this, 'sessionId', itemIndex);
@@ -314,7 +328,16 @@ async function executeAccountOperation(
 				`/whatsapp-sessions/${encodeURIComponent(sessionId)}/qrcode`,
 			)) as WasenderResponse;
 
-			return extractResponsePayload(response);
+			const responsePayload = extractResponsePayload(response);
+
+			return (
+				(await createQrCodeBinaryExecutionData.call(
+					this,
+					responsePayload,
+					itemIndex,
+					`session-${sessionId}-qrcode.png`,
+				)) ?? responsePayload
+			);
 		}
 		case 'getMessageLogs': {
 			const sessionId = getResourceLocatorValue.call(this, 'sessionId', itemIndex);
@@ -1017,6 +1040,41 @@ function extractResponsePayload(response: WasenderResponse): unknown {
 	const clonedResponse = { ...response };
 	delete clonedResponse.success;
 	return clonedResponse;
+}
+
+async function createQrCodeBinaryExecutionData(
+	this: IExecuteFunctions,
+	payload: unknown,
+	itemIndex: number,
+	fileName: string,
+): Promise<NodeExecutionDataResult | undefined> {
+	if (!isObject(payload)) {
+		return undefined;
+	}
+
+	const qrCode = getOptionalObjectString(payload, 'qrCode');
+
+	if (!qrCode) {
+		return undefined;
+	}
+
+	const binaryData = await this.helpers.prepareBinaryData(
+		renderQrCodeBuffer(qrCode) as Parameters<typeof this.helpers.prepareBinaryData>[0],
+		fileName,
+		'image/png',
+	);
+
+	return {
+		__executionData: [
+			{
+				json: {},
+				binary: {
+					data: binaryData,
+				},
+				pairedItem: { item: itemIndex },
+			},
+		],
+	};
 }
 
 function toExecutionData(payload: unknown, itemIndex: number): INodeExecutionData[] {

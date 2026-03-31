@@ -11,6 +11,7 @@ import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { getSessions } from '../WasenderApi/listSearch/getSessions';
 import { requestRetryOptions, sessionIdSelect } from '../WasenderApi/shared/descriptions';
+import { renderQrCodeBuffer } from '../WasenderApi/shared/qrcode';
 import { wasenderApiRequest } from '../WasenderApi/shared/transport';
 
 type WasenderResponse = IDataObject;
@@ -158,6 +159,15 @@ export class WasenderApiTrigger implements INodeType {
 			};
 		}
 
+		const qrCodeExecutionData = await createQrCodeWebhookExecutionData.call(this, body, eventName);
+
+		if (qrCodeExecutionData) {
+			return {
+				webhookResponse: { received: true },
+				workflowData: [[qrCodeExecutionData]],
+			};
+		}
+
 		const executionData: INodeExecutionData = {
 			json: {
 				...body,
@@ -213,6 +223,35 @@ function getSelectedEvents(this: IHookFunctions | IWebhookFunctions): string[] {
 	return Array.isArray(events) ? events : [String(events)];
 }
 
+async function createQrCodeWebhookExecutionData(
+	this: IWebhookFunctions,
+	body: IDataObject,
+	eventName: string,
+): Promise<INodeExecutionData | undefined> {
+	if (eventName !== 'qrcode.updated' || !isObject(body.data)) {
+		return undefined;
+	}
+
+	const qrCode = getOptionalStringValue(body.data.qr);
+
+	if (!qrCode) {
+		return undefined;
+	}
+
+	const binaryData = await this.helpers.prepareBinaryData(
+		renderQrCodeBuffer(qrCode) as Parameters<typeof this.helpers.prepareBinaryData>[0],
+		`session-${getSessionId.call(this)}-qrcode.png`,
+		'image/png',
+	);
+
+	return {
+		json: {},
+		binary: {
+			data: binaryData,
+		},
+	};
+}
+
 function getWebhookSecretFromSession(session: IDataObject): string | undefined {
 	const secret = session.webhook_secret;
 
@@ -260,4 +299,8 @@ function removeUndefined<T extends IDataObject>(value: T): T {
 	return Object.fromEntries(
 		Object.entries(value).filter(([, entryValue]) => typeof entryValue !== 'undefined'),
 	) as T;
+}
+
+function isObject(value: unknown): value is IDataObject {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
